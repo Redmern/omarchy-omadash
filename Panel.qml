@@ -824,6 +824,7 @@ Item {
   AudioModel {
     id: audio
     active: root.screen === "audio" && root.opened
+    levelActive: root.screen === "audio" && root.opened
   }
 
   DisplayModel {

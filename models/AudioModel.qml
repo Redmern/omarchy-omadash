@@ -7,6 +7,11 @@ Item {
   id: audio
 
   property bool active: false
+  // Drives the live mic-level meter separately from `active`, since it
+  // opens the mic device — only run it while the Audio pane is actually
+  // on screen, not just while the panel is open.
+  property bool levelActive: false
+  property real inputLevelPct: 0
 
   property bool muted: false
   property real volumePct: 0
@@ -120,4 +125,34 @@ Item {
   Process { id: audioInputVolumeProcess }
   Process { id: audioSinkProcess; onExited: audio.refresh() }
   Process { id: audioSourceProcess; onExited: audio.refresh() }
+
+  // Live mic level: parec streams raw PCM from the default source, and a
+  // tiny Python loop reduces each ~0.1s chunk to a 0-100 peak, one per line.
+  onLevelActiveChanged: if (!audio.levelActive) audio.inputLevelPct = 0
+
+  Process {
+    id: micLevelProcess
+    running: audio.levelActive
+    command: ["bash", "-c",
+      "trap 'kill 0' EXIT; " +
+      "parec --format=s16le --rate=8000 --channels=1 -d @DEFAULT_SOURCE@ 2>/dev/null | " +
+      "python3 -u -c \"" +
+      "import sys, array\n" +
+      "CHUNK = 1600\n" +
+      "while True:\n" +
+      "    data = sys.stdin.buffer.read(CHUNK)\n" +
+      "    if not data: break\n" +
+      "    a = array.array('h'); a.frombytes(data[:len(data)//2*2])\n" +
+      "    peak = max((abs(x) for x in a), default=0)\n" +
+      "    print(min(100, int(peak / 32767 * 300)), flush=True)\n" +
+      "\""
+    ]
+    stdout: SplitParser {
+      splitMarker: "\n"
+      onRead: (line) => {
+        var pct = parseInt(line)
+        if (!isNaN(pct)) audio.inputLevelPct = pct
+      }
+    }
+  }
 }

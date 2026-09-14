@@ -200,6 +200,24 @@ ColumnLayout {
               }
             }
 
+            // Live mic level — moves with actual sound picked up, separate
+            // from the (static) input volume slider above.
+            Rectangle {
+              Layout.fillWidth: true
+              height: 3
+              radius: 1.5
+              color: "#313244"
+              opacity: audio.inputMuted ? 0.4 : 1
+
+              Rectangle {
+                width: parent.width * (Math.min(100, audio.inputLevelPct) / 100)
+                height: parent.height
+                radius: 1.5
+                color: "#a6e3a1"
+                Behavior on width { NumberAnimation { duration: 60 } }
+              }
+            }
+
             Repeater {
               model: audio.sources
 
