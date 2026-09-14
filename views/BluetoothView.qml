@@ -56,7 +56,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("bluetooth")
+            visible: root.hintHeld
             text: root.hintText("bluetooth")
             color: "#6c7086"
             font.pixelSize: 9

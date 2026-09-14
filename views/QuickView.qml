@@ -27,7 +27,7 @@ ColumnLayout {
   }
 
   Text {
-    visible: root.isHintVisible("quick")
+    visible: root.hintHeld
     text: root.hintText("quick")
     color: "#6c7086"
     font.pixelSize: 9

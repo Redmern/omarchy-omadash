@@ -37,7 +37,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("apps") && !root.appsSearching
+            visible: root.hintHeld && !root.appsSearching
             text: root.hintText("apps")
             color: "#6c7086"
             font.pixelSize: 9

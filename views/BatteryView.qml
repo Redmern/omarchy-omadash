@@ -36,7 +36,7 @@ ColumnLayout {
   }
 
   Text {
-    visible: root.isHintVisible("battery")
+    visible: root.hintHeld
     text: root.hintText("battery")
     color: "#6c7086"
     font.pixelSize: 9

@@ -72,7 +72,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("audio")
+            visible: root.hintHeld
             text: root.hintText("audio")
             color: "#6c7086"
             font.pixelSize: 9

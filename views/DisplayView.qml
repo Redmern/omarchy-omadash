@@ -33,7 +33,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("display")
+            visible: root.hintHeld
             text: root.hintText("display")
             color: "#6c7086"
             font.pixelSize: 9

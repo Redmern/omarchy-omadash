@@ -44,7 +44,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("btdevice")
+            visible: root.hintHeld
             text: root.hintText("btdevice")
             color: "#6c7086"
             font.pixelSize: 9

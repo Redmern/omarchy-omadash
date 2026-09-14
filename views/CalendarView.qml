@@ -32,7 +32,7 @@ ColumnLayout {
   }
 
   Text {
-    visible: root.isHintVisible("calendar")
+    visible: root.hintHeld
     text: root.hintText("calendar")
     color: "#6c7086"
     font.pixelSize: 9

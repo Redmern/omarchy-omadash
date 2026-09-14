@@ -78,7 +78,7 @@ ColumnLayout {
           }
 
           Text {
-            visible: root.isHintVisible("network")
+            visible: root.hintHeld
             text: root.hintText("network")
             color: "#6c7086"
             font.pixelSize: 9

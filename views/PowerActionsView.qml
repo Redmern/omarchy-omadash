@@ -32,7 +32,7 @@ Item {
     }
 
     Text {
-      visible: root.isHintVisible("poweractions")
+      visible: root.hintHeld
       text: root.hintText("poweractions")
       color: "#6c7086"
       font.pixelSize: 9

@@ -132,6 +132,7 @@ Item {
 
   function hintText(screenName) {
     switch (screenName) {
+      case "grid": return "hjkl move · space open · s settings · or press a tile's letter"
       case "network": return "hjkl move · space select · " + (root.wifiPowerKey || "").toUpperCase() + " toggles Wi-Fi"
       case "bluetooth": return "jk move · space connect · " + (root.bluetoothPowerKey || "").toUpperCase() + " toggles on/off"
       case "btdevice": return "space toggle · f forget"
@@ -700,6 +701,12 @@ Item {
     root.screen = "grid"
     root.windowVisible = true
     root.opened = true
+    // Start Wi-Fi/Bluetooth scanning right away so those panes are already
+    // populated by the time you navigate to them, instead of waiting until
+    // each pane is opened to kick off its first refresh.
+    net.refresh()
+    bt.refresh()
+    bt.startScan()
   }
 
   function close() {
@@ -800,12 +807,16 @@ Item {
 
   NetworkModel {
     id: net
-    active: root.screen === "network" && root.opened
+    // Kept active for the whole time the panel is open (not just while its
+    // pane is showing) so Wi-Fi results are already there when you get to it.
+    active: root.opened
   }
 
   BluetoothModel {
     id: bt
-    active: root.screen === "bluetooth" && root.opened
+    // Same as net above: scan in the background from open() so devices are
+    // already listed by the time you switch to the Bluetooth pane.
+    active: root.opened
     detailActive: root.screen === "btdevice" && root.opened
     onDetailForgotten: root.screen = "bluetooth"
   }

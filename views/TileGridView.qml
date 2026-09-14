@@ -7,6 +7,7 @@ ColumnLayout {
 
           anchors.fill: parent
           anchors.margins: 10
+          anchors.bottomMargin: 18
           spacing: 8
           opacity: root.screen === "grid" ? 1 : 0
           enabled: root.screen === "grid"
@@ -49,6 +50,15 @@ ColumnLayout {
                 }
               }
             }
+          }
+
+          Text {
+            visible: root.hintHeld
+            text: root.hintText("grid")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           GridLayout {
