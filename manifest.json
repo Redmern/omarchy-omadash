@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "red.omadash",
+  "name": "Omadash",
+  "version": "1.0.0",
+  "author": "red",
+  "description": "Keyboard-first quick-settings dashboard: Wi-Fi, Bluetooth, Audio, Display, Power, and Apps in one popup.",
+  "kinds": [
+    "panel"
+  ],
+  "entryPoints": {
+    "panel": "Panel.qml"
+  }
+}

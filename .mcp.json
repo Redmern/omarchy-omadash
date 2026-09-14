@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "fleet": {
+      "type": "stdio",
+      "command": "/home/red/.local/bin/fleet",
+      "args": [
+        "mcp",
+        "--project",
+        "oma_plugins",
+        "--caller",
+        "agent:omarchy-hello-popup/main"
+      ]
+    }
+  }
+}
