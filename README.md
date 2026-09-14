@@ -67,6 +67,27 @@ appear; press it again (or Esc, or click outside) to close it.
 To use a different combo, edit that line in `bindings.lua` directly, then
 save (no reload command needed).
 
+## Remove
+
+If installed via `omarchy plugin add`:
+
+```bash
+omarchy plugin remove red.vimdash
+```
+
+If installed via `./install.sh` (dev symlink):
+
+```bash
+rm ~/.config/omarchy/plugins/vimdash
+```
+
+Either way, also remove the keybind line `install.sh` appended from
+`~/.config/hypr/bindings.lua` if you no longer want it:
+
+```
+o.bind("SUPER + APOSTROPHE", "Vimdash", "omarchy-shell shell toggle red.vimdash")
+```
+
 ## Manual testing (no keybind needed)
 
 ```bash
@@ -79,6 +100,10 @@ If edits to `Panel.qml` don't seem to apply, force a reload:
 ```bash
 omarchy-shell shell rescanPlugins
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE). No external dependencies beyond Omarchy/Quickshell itself.
 
 ## Next steps
 
