@@ -134,8 +134,13 @@ Item {
     id: micLevelProcess
     running: audio.levelActive
     command: ["bash", "-c",
-      "trap 'kill 0' EXIT; " +
-      "parec --format=s16le --rate=8000 --channels=1 -d @DEFAULT_SOURCE@ 2>/dev/null | " +
+      // set -m puts the backgrounded pipeline in its OWN process group (its
+      // PGID equals $PID below), so the trap kills exactly that group, not
+      // ours — a bare `kill 0` here would signal every process in *our*
+      // group, which (if Quickshell doesn't isolate this child) can reach
+      // the compositor session itself.
+      "set -m; " +
+      "(parec --format=s16le --rate=8000 --channels=1 -d @DEFAULT_SOURCE@ 2>/dev/null | " +
       "python3 -u -c \"" +
       "import sys, array\n" +
       "CHUNK = 1600\n" +
@@ -145,7 +150,8 @@ Item {
       "    a = array.array('h'); a.frombytes(data[:len(data)//2*2])\n" +
       "    peak = max((abs(x) for x in a), default=0)\n" +
       "    print(min(100, int(peak / 32767 * 300)), flush=True)\n" +
-      "\""
+      "\") & " +
+      "PID=$!; trap 'kill -TERM -$PID 2>/dev/null' EXIT; wait $PID"
     ]
     stdout: SplitParser {
       splitMarker: "\n"
