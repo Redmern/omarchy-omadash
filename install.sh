@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ID="omadash"
+PLUGIN_ID="vimdash"
 DEST="$HOME/.config/omarchy/plugins/$PLUGIN_ID"
 
 mkdir -p "$HOME/.config/omarchy/plugins"
@@ -18,14 +18,14 @@ ln -sfn "$REPO_DIR" "$DEST"
 echo "Linked $DEST -> $REPO_DIR"
 
 BINDINGS_FILE="$HOME/.config/hypr/bindings.lua"
-BIND_LINE='o.bind("SUPER + APOSTROPHE", "Omadash", "omarchy-shell shell toggle red.omadash")'
+BIND_LINE='o.bind("SUPER + APOSTROPHE", "Vimdash", "omarchy-shell shell toggle red.vimdash")'
 
 if [ -f "$BINDINGS_FILE" ]; then
-  if ! grep -qF "red.omadash" "$BINDINGS_FILE"; then
+  if ! grep -qF "red.vimdash" "$BINDINGS_FILE"; then
     printf '%s\n' "$BIND_LINE" >> "$BINDINGS_FILE"
     echo "Added default keybind (SUPER + APOSTROPHE) to $BINDINGS_FILE"
   else
-    echo "Keybind for red.omadash already present in $BINDINGS_FILE, leaving it alone"
+    echo "Keybind for red.vimdash already present in $BINDINGS_FILE, leaving it alone"
   fi
 else
   echo "No $BINDINGS_FILE found; add manually:" >&2
@@ -33,4 +33,4 @@ else
 fi
 
 echo "Reload with: omarchy-shell shell rescanPlugins"
-echo "Test with:   omarchy-shell shell toggle red.omadash"
+echo "Test with:   omarchy-shell shell toggle red.vimdash"

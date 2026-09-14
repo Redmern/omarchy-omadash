@@ -1,4 +1,4 @@
-# Omadash
+# Vimdash
 
 A keyboard-first quick-settings dashboard for [Omarchy](https://omarchy.org/),
 written in QML for [Quickshell](https://quickshell.org/). A single popup,
@@ -42,7 +42,7 @@ install.sh      Symlinks this repo into ~/.config/omarchy/plugins/
 Quick install (clones into `~/.config/omarchy/plugins/`, no editing):
 
 ```bash
-omarchy plugin add https://github.com/Redmern/omarchy-omadash.git --enable
+omarchy plugin add https://github.com/Redmern/omarchy-vimdash.git --enable
 ```
 
 Dev install (symlinks this repo instead, so edits here take effect live):
@@ -51,14 +51,14 @@ Dev install (symlinks this repo instead, so edits here take effect live):
 ./install.sh
 ```
 
-This symlinks the repo to `~/.config/omarchy/plugins/omadash/`, so
+This symlinks the repo to `~/.config/omarchy/plugins/vimdash/`, so
 you keep editing files here and the running shell picks up changes live.
 
 It also appends a default keybind to `~/.config/hypr/bindings.lua` (unless
-a `red.omadash` bind is already there):
+a `red.vimdash` bind is already there):
 
 ```lua
-o.bind("SUPER + APOSTROPHE", "Omadash", "omarchy-shell shell toggle red.omadash")
+o.bind("SUPER + APOSTROPHE", "Vimdash", "omarchy-shell shell toggle red.vimdash")
 ```
 
 Hyprland config hot-reloads on save. Press the bind — the popup should
@@ -70,8 +70,8 @@ save (no reload command needed).
 ## Manual testing (no keybind needed)
 
 ```bash
-omarchy-shell shell listPlugins          # confirm red.omadash is discovered
-omarchy-shell shell toggle red.omadash
+omarchy-shell shell listPlugins          # confirm red.vimdash is discovered
+omarchy-shell shell toggle red.vimdash
 ```
 
 If edits to `Panel.qml` don't seem to apply, force a reload:

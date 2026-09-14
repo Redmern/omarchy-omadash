@@ -300,7 +300,7 @@ Item {
     "July", "August", "September", "October", "November", "December"]
 
   function keybindsPath() {
-    return Quickshell.env("HOME") + "/.config/omarchy/plugins/omadash/keybinds.json"
+    return Quickshell.env("HOME") + "/.config/omarchy/plugins/vimdash/keybinds.json"
   }
 
   function loadKeybinds() {
@@ -617,7 +617,7 @@ Item {
 
   function dismiss() {
     if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "red.omadash")
+      root.shell.hide((root.manifest && root.manifest.id) || "red.vimdash")
     else
       root.close()
   }
@@ -632,7 +632,7 @@ Item {
     root.windowVisible = false
     closeTimer.stop()
     if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "red.omadash")
+      root.shell.hide((root.manifest && root.manifest.id) || "red.vimdash")
   }
 
   function moveSelection(dx, dy) {
@@ -770,7 +770,7 @@ Item {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "omadash"
+    WlrLayershell.namespace: "vimdash"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
