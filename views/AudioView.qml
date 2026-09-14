@@ -57,6 +57,17 @@ ColumnLayout {
 
               MouseArea { anchors.fill: parent; onClicked: audio.toggleMute() }
             }
+
+            PaneHint { root: view.root; screenName: "audio" }
+          }
+
+          Text {
+            visible: root.isHintVisible("audio")
+            text: root.hintText("audio")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           ColumnLayout {

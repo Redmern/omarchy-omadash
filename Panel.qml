@@ -62,7 +62,7 @@ Item {
     { label: "Reboot", icon: "", command: ["omarchy-system-reboot"] },
     { label: "Shutdown", icon: "", command: ["omarchy-system-shutdown"] }
   ]
-  property var powerKeys: root.computeLetterKeys(root.powerActions, [root.keybinds.activate])
+  property var powerKeys: root.computeLetterKeys(root.powerActions, [root.keybinds.activate, root.keybinds.hint])
 
   // Small non-destructive command tiles on their own screen, run immediately
   // (no hold) and dismiss, same as a plain grid tile with a command.
@@ -77,7 +77,7 @@ Item {
     { label: "Reminders", icon: "", command: ["omarchy-reminder", "show"] }
   ]
   property var quickKeys: root.computeLetterKeys(root.quickActions,
-    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate])
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint])
 
   // Shared "first free letter of the label, else any free a-z" assignment
   // used for the main grid, the power-action tiles, and the quick tiles.
@@ -106,17 +106,48 @@ Item {
 
   // Rebindable single-key actions (letter keys only). Esc is always "back"
   // and is not rebindable. Persisted to keybinds.json next to this plugin.
-  readonly property var defaultKeybinds: ({ up: "k", down: "j", left: "h", right: "l", activate: " ", search: "?" })
-  property var keybinds: ({ up: "k", down: "j", left: "h", right: "l", activate: " ", search: "?" })
+  readonly property var defaultKeybinds: ({ up: "k", down: "j", left: "h", right: "l", activate: " ", search: "?", hint: "i" })
+  property var keybinds: ({ up: "k", down: "j", left: "h", right: "l", activate: " ", search: "?", hint: "i" })
   // One quick-open letter per grid tile, keyed by tile.view. Defaults to the
   // tile label's first letter that doesn't clash with another binding,
   // falling through the label's later letters and finally any free a-z.
   property var tileKeys: ({})
   property string rebindingAction: ""
 
+  // Per-pane visibility for the keybind-hint line, toggled by kb.hint and
+  // an info icon on each pane. Missing entry means visible (default on).
+  property var hintVisible: ({})
+
+  function isHintVisible(screenName) {
+    return root.hintVisible[screenName] !== false
+  }
+
+  function toggleHint(screenName) {
+    var updated = Object.assign({}, root.hintVisible)
+    updated[screenName] = !root.isHintVisible(screenName)
+    root.hintVisible = updated
+    root.saveKeybinds()
+  }
+
+  function hintText(screenName) {
+    switch (screenName) {
+      case "network": return "hjkl move · space select"
+      case "bluetooth": return "jk move · space connect"
+      case "btdevice": return "space toggle · f forget"
+      case "audio": return "jk move · hl adjust · space mute"
+      case "display": return "jk move · hl adjust · letter jumps to a control (n = night light)"
+      case "battery": return "hl move · space apply · letter jumps to a profile"
+      case "poweractions": return "hold a tile's letter to run it · tap to ask first"
+      case "quick": return "hjkl move · space run · or press a tile's letter"
+      case "calendar": return "hjkl move day/week"
+      case "apps": return "jk move · space launch · ? search"
+      default: return ""
+    }
+  }
+
   function computeDefaultTileKeys() {
     var byView = root.computeLetterKeys(root.tiles,
-      [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, "s"])
+      [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint, "s"])
     var result = {}
     root.tiles.forEach(function(tile) { result[tile.view] = byView[tile.label] })
     return result
@@ -126,7 +157,10 @@ Item {
   // Holding an action's key for powerHoldMs executes it immediately, with
   // powerHoldProgress (0..1) driving a fill animation on its tile. Releasing
   // early instead raises a yes/no confirmation for that action.
-  readonly property int powerHoldMs: 900
+  readonly property real minPowerHoldSeconds: 0.1
+  readonly property real maxPowerHoldSeconds: 2.0
+  property real powerHoldSeconds: 0.5
+  readonly property int powerHoldMs: Math.round(root.powerHoldSeconds * 1000)
   property string powerHoldLabel: ""
   property real powerHoldProgress: 0
   property var powerConfirmAction: null
@@ -167,6 +201,13 @@ Item {
   function confirmPowerAction(yes) {
     if (yes && root.powerConfirmAction) root.runPowerAction(root.powerConfirmAction)
     root.powerConfirmAction = null
+  }
+
+  function adjustPowerHoldSeconds(delta) {
+    var next = Math.round((root.powerHoldSeconds + delta) * 10) / 10
+    next = Math.max(root.minPowerHoldSeconds, Math.min(root.maxPowerHoldSeconds, next))
+    root.powerHoldSeconds = next
+    root.saveKeybinds()
   }
 
   Timer {
@@ -318,13 +359,21 @@ Item {
       var parsed = JSON.parse(trimmed)
       root.keybinds = Object.assign({}, root.defaultKeybinds, parsed.keybinds || {})
       root.tileKeys = Object.assign({}, root.computeDefaultTileKeys(), parsed.tileKeys || {})
+      root.hintVisible = parsed.hintVisible || {}
+      if (typeof parsed.powerHoldSeconds === "number")
+        root.powerHoldSeconds = Math.max(root.minPowerHoldSeconds, Math.min(root.maxPowerHoldSeconds, parsed.powerHoldSeconds))
     } catch (e) {
       root.tileKeys = defaultTileKeys
     }
   }
 
   function saveKeybinds() {
-    var json = JSON.stringify({ keybinds: root.keybinds, tileKeys: root.tileKeys })
+    var json = JSON.stringify({
+      keybinds: root.keybinds,
+      tileKeys: root.tileKeys,
+      hintVisible: root.hintVisible,
+      powerHoldSeconds: root.powerHoldSeconds
+    })
     var path = root.keybindsPath()
     keybindsSaveProcess.command = ["bash", "-c",
       "mkdir -p \"$(dirname " + JSON.stringify(path) + ")\" && cat > " +
@@ -375,19 +424,21 @@ Item {
   property int settingsIndex: 0
 
   function settingsActions() {
-    var actions = ["up", "down", "left", "right", "activate", "search"]
+    var actions = ["holdtime", "up", "down", "left", "right", "activate", "search", "hint"]
     root.tiles.forEach(function(tile) { actions.push("tile:" + tile.view) })
     return actions
   }
 
   function settingsLabel(action) {
     switch (action) {
+      case "holdtime": return "Power hold time"
       case "up": return "Move up"
       case "down": return "Move down"
       case "left": return "Move left"
       case "right": return "Move right"
       case "activate": return "Activate / select"
       case "search": return "Search apps"
+      case "hint": return "Toggle pane hint"
     }
     if (action.indexOf("tile:") === 0) {
       var view = action.slice(5)
@@ -398,6 +449,7 @@ Item {
   }
 
   function settingsKeyFor(action) {
+    if (action === "holdtime") return root.powerHoldSeconds.toFixed(1) + "s"
     if (action.indexOf("tile:") === 0) return root.tileKeys[action.slice(5)] || ""
     return root.keybinds[action] || ""
   }
@@ -426,6 +478,12 @@ Item {
   // between them, h/l adjusts the focused one's value. Scale only moves a
   // selection cursor with h/l; it's only applied on activate (Enter).
   readonly property var displayControls: ["brightness", "textsize", "scale", "nightlight"]
+  readonly property var displayControlLabels: ({
+    brightness: "Brightness", textsize: "Text Size", scale: "Scale", nightlight: "Night Light"
+  })
+  property var displayKeys: root.computeLetterKeys(
+    root.displayControls.map(function(c) { return { label: root.displayControlLabels[c] } }),
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint])
   property int displayFocusIndex: 0
   property int scaleSelectedIndex: 0
 
@@ -449,6 +507,10 @@ Item {
 
     var rowLength = Math.min(columns, count - nextRow * columns)
     root.scaleSelectedIndex = nextRow * columns + Math.min(col, rowLength - 1)
+  }
+
+  function displayKeyFor(controlId) {
+    return root.displayKeys[root.displayControlLabels[controlId]] || ""
   }
 
   function moveDisplayFocus(delta) {
@@ -550,6 +612,10 @@ Item {
         return []
     }
   }
+
+  property var profileKeys: root.computeLetterKeys(
+    power.profiles.map(function(p) { return { label: p.name } }),
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint])
 
   function movePane(delta) {
     var items = root.paneList()
@@ -805,7 +871,7 @@ Item {
         if (root.rebindingAction) return
         if (root.screen === "grid") root.activateSelection()
         else if (root.screen === "apps") root.activateApp()
-        else if (root.screen === "settings") root.startRebind(root.settingsActions()[root.settingsIndex])
+        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa !== "holdtime") root.startRebind(sa) }
         else if (root.screen === "display") root.activateDisplayFocus()
         else if (root.screen === "audio") root.activateAudioFocus()
         else if (root.screen === "quick") root.activateQuickSelection()
@@ -816,7 +882,7 @@ Item {
         if (root.rebindingAction) return
         if (root.screen === "grid") root.activateSelection()
         else if (root.screen === "apps") root.activateApp()
-        else if (root.screen === "settings") root.startRebind(root.settingsActions()[root.settingsIndex])
+        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa !== "holdtime") root.startRebind(sa) }
         else if (root.screen === "display") root.activateDisplayFocus()
         else if (root.screen === "audio") root.activateAudioFocus()
         else if (root.screen === "quick") root.activateQuickSelection()
@@ -850,6 +916,12 @@ Item {
 
         var kb = root.keybinds
         var t = (event.text || "").toLowerCase()
+
+        if (t === kb.hint && root.screen !== "grid" && root.screen !== "settings" && !root.powerConfirmAction) {
+          root.toggleHint(root.screen)
+          event.accepted = true
+          return
+        }
 
         switch (root.screen) {
           case "grid":
@@ -893,6 +965,14 @@ Item {
             if (t === kb.activate) { root.activatePane(); event.accepted = true }
             else if (t === kb.left) { root.movePane(-1); event.accepted = true }
             else if (t === kb.right) { root.movePane(1); event.accepted = true }
+            else {
+              var profileIdx = power.profiles.findIndex(function(p) { return root.profileKeys[p.name] === t })
+              if (profileIdx >= 0) {
+                root.paneIndex = profileIdx
+                root.activatePane()
+                event.accepted = true
+              }
+            }
             break
           case "poweractions":
             if (root.powerConfirmAction) {
@@ -947,12 +1027,20 @@ Item {
             } else if (t === kb.right) { root.adjustDisplayFocus(1); event.accepted = true }
             else if (t === kb.left) { root.adjustDisplayFocus(-1); event.accepted = true }
             else if (t === kb.activate) { root.activateDisplayFocus(); event.accepted = true }
+            else {
+              var controlIdx = root.displayControls.findIndex(function(c) { return root.displayKeyFor(c) === t })
+              if (controlIdx >= 0) { root.displayFocusIndex = controlIdx; event.accepted = true }
+            }
             break
-          case "settings":
+          case "settings": {
+            var settingsAction = root.settingsActions()[root.settingsIndex]
             if (t === kb.up) { root.moveSettingsSelection(-1); event.accepted = true }
             else if (t === kb.down) { root.moveSettingsSelection(1); event.accepted = true }
-            else if (t === kb.activate) { root.startRebind(root.settingsActions()[root.settingsIndex]); event.accepted = true }
+            else if (settingsAction === "holdtime" && t === kb.left) { root.adjustPowerHoldSeconds(-0.1); event.accepted = true }
+            else if (settingsAction === "holdtime" && t === kb.right) { root.adjustPowerHoldSeconds(0.1); event.accepted = true }
+            else if (t === kb.activate && settingsAction !== "holdtime") { root.startRebind(settingsAction); event.accepted = true }
             break
+          }
           case "btdevice":
             if (t === kb.activate) { bt.toggleConnect(bt.detail); event.accepted = true }
             else if (t === "f") { bt.forget(bt.detail); event.accepted = true }

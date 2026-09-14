@@ -22,6 +22,17 @@ ColumnLayout {
 
     Text { text: ""; font.family: "Symbols Nerd Font"; font.pixelSize: 20; color: "#89b4fa" }
     Text { text: "Quick Actions"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true; Layout.fillWidth: true }
+
+    PaneHint { root: view.root; screenName: "quick" }
+  }
+
+  Text {
+    visible: root.isHintVisible("quick")
+    text: root.hintText("quick")
+    color: "#6c7086"
+    font.pixelSize: 9
+    wrapMode: Text.WordWrap
+    Layout.fillWidth: true
   }
 
   GridLayout {

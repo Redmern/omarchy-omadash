@@ -30,6 +30,17 @@ ColumnLayout {
     }
 
     Text { text: power.percent + "%"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true }
+
+    PaneHint { root: view.root; screenName: "battery" }
+  }
+
+  Text {
+    visible: root.isHintVisible("battery")
+    text: root.hintText("battery")
+    color: "#6c7086"
+    font.pixelSize: 9
+    wrapMode: Text.WordWrap
+    Layout.fillWidth: true
   }
 
   Rectangle {
@@ -120,6 +131,15 @@ ColumnLayout {
             font.pixelSize: 9
             Layout.alignment: Qt.AlignHCenter
           }
+        }
+
+        Text {
+          anchors.top: parent.top
+          anchors.right: parent.right
+          anchors.margins: 4
+          text: (root.profileKeys[profileRow.modelData.name] || "").toUpperCase()
+          color: profileRow.modelData.active ? "#1e1e2e" : "#6c7086"
+          font.pixelSize: 9
         }
 
         MouseArea {

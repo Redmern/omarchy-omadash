@@ -27,6 +27,17 @@ ColumnLayout {
       font.bold: true
       Layout.fillWidth: true
     }
+
+    PaneHint { root: view.root; screenName: "calendar" }
+  }
+
+  Text {
+    visible: root.isHintVisible("calendar")
+    text: root.hintText("calendar")
+    color: "#6c7086"
+    font.pixelSize: 9
+    wrapMode: Text.WordWrap
+    Layout.fillWidth: true
   }
 
   RowLayout {

@@ -39,6 +39,17 @@ ColumnLayout {
                 font.pixelSize: 9
               }
             }
+
+            PaneHint { root: view.root; screenName: "btdevice" }
+          }
+
+          Text {
+            visible: root.isHintVisible("btdevice")
+            text: root.hintText("btdevice")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           GridLayout {

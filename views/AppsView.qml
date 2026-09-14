@@ -32,6 +32,17 @@ ColumnLayout {
               color: "#6c7086"
               font.pixelSize: 11
             }
+
+            PaneHint { root: view.root; screenName: "apps" }
+          }
+
+          Text {
+            visible: root.isHintVisible("apps") && !root.appsSearching
+            text: root.hintText("apps")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           ListView {

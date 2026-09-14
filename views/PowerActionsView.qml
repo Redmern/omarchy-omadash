@@ -27,10 +27,13 @@ Item {
 
       Text { text: ""; font.family: "Symbols Nerd Font"; font.pixelSize: 20; color: "#89b4fa" }
       Text { text: "Power"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true; Layout.fillWidth: true }
+
+      PaneHint { root: view.root; screenName: "poweractions" }
     }
 
     Text {
-      text: "Hold a tile's key to run it — tap to ask first"
+      visible: root.isHintVisible("poweractions")
+      text: root.hintText("poweractions")
       color: "#6c7086"
       font.pixelSize: 9
       wrapMode: Text.WordWrap

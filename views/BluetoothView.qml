@@ -42,6 +42,17 @@ ColumnLayout {
 
               MouseArea { anchors.fill: parent; onClicked: bt.togglePower() }
             }
+
+            PaneHint { root: view.root; screenName: "bluetooth" }
+          }
+
+          Text {
+            visible: root.isHintVisible("bluetooth")
+            text: root.hintText("bluetooth")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           Text {

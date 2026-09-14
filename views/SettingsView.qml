@@ -57,7 +57,7 @@ ColumnLayout {
                 }
 
                 Rectangle {
-                  width: 60
+                  width: bindRow.modelData === "holdtime" ? 84 : 60
                   height: 22
                   radius: 5
                   color: root.rebindingAction === bindRow.modelData ? "#89b4fa" : "#313244"
@@ -67,6 +67,7 @@ ColumnLayout {
                     text: {
                       if (root.rebindingAction === bindRow.modelData) return "…"
                       var k = root.settingsKeyFor(bindRow.modelData)
+                      if (bindRow.modelData === "holdtime") return "◄ " + k + " ►"
                       return k === " " ? "SPACE" : k.toUpperCase()
                     }
                     color: root.rebindingAction === bindRow.modelData ? "#1e1e2e" : "#cdd6f4"
@@ -80,7 +81,7 @@ ColumnLayout {
                 anchors.fill: parent
                 onClicked: {
                   root.settingsIndex = bindRow.index
-                  root.startRebind(bindRow.modelData)
+                  if (bindRow.modelData !== "holdtime") root.startRebind(bindRow.modelData)
                 }
               }
             }

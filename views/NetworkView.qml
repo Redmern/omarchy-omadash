@@ -44,6 +44,8 @@ ColumnLayout {
 
             Item { Layout.fillWidth: true }
 
+            PaneHint { root: view.root; screenName: "network" }
+
             Rectangle {
               width: 40
               height: 22
@@ -64,6 +66,15 @@ ColumnLayout {
 
               MouseArea { anchors.fill: parent; onClicked: net.toggleRadio() }
             }
+          }
+
+          Text {
+            visible: root.isHintVisible("network")
+            text: root.hintText("network")
+            color: "#6c7086"
+            font.pixelSize: 9
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
           }
 
           GridLayout {
