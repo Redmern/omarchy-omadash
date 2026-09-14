@@ -27,7 +27,7 @@ ColumnLayout {
               Layout.fillWidth: true
             }
             Text {
-              visible: !root.appsSearching
+              visible: !root.appsSearching && root.isHintVisible("apps")
               text: "?"
               color: "#6c7086"
               font.pixelSize: 11

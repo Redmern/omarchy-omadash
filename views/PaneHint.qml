@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Small info icon + keybind badge shown in a pane's header. Click (or press
-// root.keybinds.hint) toggles that pane's hint line on/off.
+// Small info icon + keybind badge shown in a pane's header. Hold down (mouse
+// or root.keybinds.hint) to show that pane's hint line; release to hide it.
 RowLayout {
   id: view
   property var root
@@ -10,10 +10,10 @@ RowLayout {
   spacing: 4
 
   Text {
-    text: ""
+    text: ""
     font.family: "Symbols Nerd Font"
     font.pixelSize: 12
-    color: root.isHintVisible(view.screenName) ? "#89b4fa" : "#6c7086"
+    color: "#89b4fa"
   }
 
   Rectangle {
@@ -33,6 +33,8 @@ RowLayout {
 
   MouseArea {
     anchors.fill: parent
-    onClicked: root.toggleHint(view.screenName)
+    onPressed: root.hintHeld = true
+    onReleased: root.hintHeld = false
+    onCanceled: root.hintHeld = false
   }
 }

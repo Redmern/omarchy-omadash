@@ -91,6 +91,7 @@ Item {
           }
 
           Text {
+            visible: root.isHintVisible("poweractions")
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 4

@@ -23,11 +23,22 @@ ColumnLayout {
             Text { text: ""; font.family: "Symbols Nerd Font"; font.pixelSize: 20; color: "#89b4fa" }
             Text { text: "Bluetooth"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true; Layout.fillWidth: true }
 
+            Text {
+              visible: root.isHintVisible("bluetooth")
+              text: (root.bluetoothPowerKey || "").toUpperCase()
+              color: "#6c7086"
+              font.pixelSize: 9
+            }
+
+            PaneHint { root: view.root; screenName: "bluetooth" }
+
             Rectangle {
               width: 40
               height: 22
               radius: 11
               color: bt.powered ? "#89b4fa" : "#45475a"
+              border.width: root.screen === "bluetooth" && root.paneIndex === 0 ? 2 : 0
+              border.color: "#f9e2af"
               Behavior on color { ColorAnimation { duration: 150 } }
 
               Rectangle {
@@ -40,10 +51,8 @@ ColumnLayout {
                 Behavior on x { NumberAnimation { duration: 150 } }
               }
 
-              MouseArea { anchors.fill: parent; onClicked: bt.togglePower() }
+              MouseArea { anchors.fill: parent; onClicked: { root.paneIndex = 0; bt.togglePower() } }
             }
-
-            PaneHint { root: view.root; screenName: "bluetooth" }
           }
 
           Text {
@@ -68,7 +77,7 @@ ColumnLayout {
             clip: true
             spacing: 4
             model: bt.devices
-            currentIndex: root.screen === "bluetooth" ? root.paneIndex : -1
+            currentIndex: root.screen === "bluetooth" ? root.paneIndex - 1 : -1
             highlightMoveDuration: 100
 
             delegate: Rectangle {
@@ -79,7 +88,7 @@ ColumnLayout {
               height: 32
               radius: 6
               color: modelData.connected ? "#45475a" : "transparent"
-              border.width: root.screen === "bluetooth" && root.paneIndex === index ? 2 : 0
+              border.width: root.screen === "bluetooth" && root.paneIndex === index + 1 ? 2 : 0
               border.color: "#f9e2af"
 
               RowLayout {
@@ -96,7 +105,7 @@ ColumnLayout {
 
               MouseArea {
                 anchors.fill: parent
-                onClicked: { root.paneIndex = btRow.index; root.screen = "btdevice"; bt.showDetail(btRow.modelData) }
+                onClicked: { root.paneIndex = btRow.index + 1; root.screen = "btdevice"; bt.showDetail(btRow.modelData) }
               }
             }
           }

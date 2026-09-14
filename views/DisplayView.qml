@@ -23,10 +23,11 @@ ColumnLayout {
             Text { text: ""; font.family: "Symbols Nerd Font"; font.pixelSize: 20; color: "#89b4fa" }
             ColumnLayout {
               spacing: 0
-              Layout.fillWidth: true
               Text { text: "Display"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true }
               Text { text: disp.monitorName || ""; color: "#a6adc8"; font.pixelSize: 9 }
             }
+
+            Item { Layout.fillWidth: true }
 
             PaneHint { root: view.root; screenName: "display" }
           }
@@ -48,7 +49,7 @@ ColumnLayout {
             RowLayout {
               Layout.fillWidth: true
               Text {
-                text: "BRIGHTNESS (" + root.displayKeyFor("brightness").toUpperCase() + ")"
+                text: "BRIGHTNESS" + (root.isHintVisible("display") ? " (" + root.displayKeyFor("brightness").toUpperCase() + ")" : "")
                 color: root.screen === "display" && root.displayFocusIndex === 0 ? "#f9e2af" : "#a6adc8"
                 font.pixelSize: 9
               }
@@ -88,7 +89,7 @@ ColumnLayout {
             RowLayout {
               Layout.fillWidth: true
               Text {
-                text: "TEXT SIZE (" + root.displayKeyFor("textsize").toUpperCase() + ")"
+                text: "TEXT SIZE" + (root.isHintVisible("display") ? " (" + root.displayKeyFor("textsize").toUpperCase() + ")" : "")
                 color: root.screen === "display" && root.displayFocusIndex === 1 ? "#f9e2af" : "#a6adc8"
                 font.pixelSize: 9
               }
@@ -131,7 +132,7 @@ ColumnLayout {
             spacing: 6
 
             Text {
-              text: "SCALE (" + root.displayKeyFor("scale").toUpperCase() + ")"
+              text: "SCALE" + (root.isHintVisible("display") ? " (" + root.displayKeyFor("scale").toUpperCase() + ")" : "")
               color: root.screen === "display" && root.displayFocusIndex === 2 ? "#f9e2af" : "#a6adc8"
               font.pixelSize: 9
             }
@@ -188,7 +189,7 @@ ColumnLayout {
                 color: root.screen === "display" && root.displayFocusIndex === 3 ? "#f9e2af" : "#89b4fa"
               }
               Text {
-                text: "Night Light (" + root.displayKeyFor("nightlight").toUpperCase() + ")"
+                text: "Night Light" + (root.isHintVisible("display") ? " (" + root.displayKeyFor("nightlight").toUpperCase() + ")" : "")
                 color: root.screen === "display" && root.displayFocusIndex === 3 ? "#f9e2af" : "#cdd6f4"
                 font.pixelSize: 11
                 Layout.fillWidth: true

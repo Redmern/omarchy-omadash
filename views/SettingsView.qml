@@ -81,7 +81,8 @@ ColumnLayout {
                 anchors.fill: parent
                 onClicked: {
                   root.settingsIndex = bindRow.index
-                  if (bindRow.modelData !== "holdtime") root.startRebind(bindRow.modelData)
+                  if (bindRow.modelData === "showhints") root.toggleShowKeybindHints()
+                  else if (bindRow.modelData !== "holdtime") root.startRebind(bindRow.modelData)
                 }
               }
             }

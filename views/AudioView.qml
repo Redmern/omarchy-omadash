@@ -29,7 +29,6 @@ ColumnLayout {
 
             ColumnLayout {
               spacing: 0
-              Layout.fillWidth: true
               Text { text: "Audio"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true }
               Text {
                 text: audio.muted ? "MUTED" : Math.round(audio.volumePct) + "%"
@@ -38,11 +37,24 @@ ColumnLayout {
               }
             }
 
+            Item { Layout.fillWidth: true }
+
+            Text {
+              visible: root.isHintVisible("audio")
+              text: (root.audioMuteKey || "").toUpperCase()
+              color: "#6c7086"
+              font.pixelSize: 9
+            }
+
+            PaneHint { root: view.root; screenName: "audio" }
+
             Rectangle {
               width: 40
               height: 22
               radius: 11
               color: audio.muted ? "#89b4fa" : "#45475a"
+              border.width: root.screen === "audio" && root.audioFocusIndex === 0 ? 2 : 0
+              border.color: "#f9e2af"
               Behavior on color { ColorAnimation { duration: 150 } }
 
               Rectangle {
@@ -55,10 +67,8 @@ ColumnLayout {
                 Behavior on x { NumberAnimation { duration: 150 } }
               }
 
-              MouseArea { anchors.fill: parent; onClicked: audio.toggleMute() }
+              MouseArea { anchors.fill: parent; onClicked: { root.audioFocusIndex = 0; audio.toggleMute() } }
             }
-
-            PaneHint { root: view.root; screenName: "audio" }
           }
 
           Text {
@@ -79,7 +89,7 @@ ColumnLayout {
               Layout.fillWidth: true
               Text {
                 text: "OUTPUT"
-                color: root.screen === "audio" && root.audioFocusIndex === 0 ? "#f9e2af" : "#a6adc8"
+                color: root.screen === "audio" && root.audioFocusIndex === 1 ? "#f9e2af" : "#a6adc8"
                 font.pixelSize: 9
               }
               Item { Layout.fillWidth: true }
@@ -91,7 +101,7 @@ ColumnLayout {
               height: 6
               radius: 3
               color: "#313244"
-              border.width: root.screen === "audio" && root.audioFocusIndex === 0 ? 1 : 0
+              border.width: root.screen === "audio" && root.audioFocusIndex === 1 ? 1 : 0
               border.color: "#f9e2af"
 
               Rectangle {
@@ -120,7 +130,7 @@ ColumnLayout {
                 height: 32
                 radius: 6
                 color: modelData.active ? "#45475a" : "#313244"
-                border.width: root.screen === "audio" && root.audioFocusIndex === index + 1 ? 2 : 0
+                border.width: root.screen === "audio" && root.audioFocusIndex === index + 2 ? 2 : 0
                 border.color: "#f9e2af"
 
                 RowLayout {
@@ -145,7 +155,7 @@ ColumnLayout {
 
                 MouseArea {
                   anchors.fill: parent
-                  onClicked: { root.audioFocusIndex = sinkRow.index + 1; audio.setDefaultSink(sinkRow.modelData.name) }
+                  onClicked: { root.audioFocusIndex = sinkRow.index + 2; audio.setDefaultSink(sinkRow.modelData.name) }
                 }
               }
             }
@@ -160,7 +170,7 @@ ColumnLayout {
               Layout.fillWidth: true
               Text {
                 text: "INPUT"
-                color: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 1 ? "#f9e2af" : "#a6adc8"
+                color: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 2 ? "#f9e2af" : "#a6adc8"
                 font.pixelSize: 9
               }
               Item { Layout.fillWidth: true }
@@ -172,7 +182,7 @@ ColumnLayout {
               height: 6
               radius: 3
               color: "#313244"
-              border.width: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 1 ? 1 : 0
+              border.width: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 2 ? 1 : 0
               border.color: "#f9e2af"
 
               Rectangle {
@@ -201,7 +211,7 @@ ColumnLayout {
                 height: 32
                 radius: 6
                 color: modelData.active ? "#45475a" : "#313244"
-                border.width: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 2 + index ? 2 : 0
+                border.width: root.screen === "audio" && root.audioFocusIndex === audio.sinks.length + 3 + index ? 2 : 0
                 border.color: "#f9e2af"
 
                 RowLayout {
@@ -226,7 +236,7 @@ ColumnLayout {
 
                 MouseArea {
                   anchors.fill: parent
-                  onClicked: { root.audioFocusIndex = audio.sinks.length + 2 + sourceRow.index; audio.setDefaultSource(sourceRow.modelData.name) }
+                  onClicked: { root.audioFocusIndex = audio.sinks.length + 3 + sourceRow.index; audio.setDefaultSource(sourceRow.modelData.name) }
                 }
               }
             }

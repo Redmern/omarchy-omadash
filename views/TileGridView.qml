@@ -20,6 +20,8 @@ ColumnLayout {
 
             Item { Layout.fillWidth: true }
 
+            PaneHint { root: view.root; screenName: "grid" }
+
             Rectangle {
               width: 26
               height: 26
@@ -97,6 +99,7 @@ ColumnLayout {
                 }
 
                 Text {
+                  visible: root.isHintVisible("grid")
                   anchors.top: parent.top
                   anchors.right: parent.right
                   anchors.margins: 4

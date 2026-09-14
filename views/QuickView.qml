@@ -79,6 +79,7 @@ ColumnLayout {
         }
 
         Text {
+          visible: root.isHintVisible("quick")
           anchors.top: parent.top
           anchors.right: parent.right
           anchors.margins: 4

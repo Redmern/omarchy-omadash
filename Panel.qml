@@ -114,27 +114,28 @@ Item {
   property var tileKeys: ({})
   property string rebindingAction: ""
 
-  // Per-pane visibility for the keybind-hint line, toggled by kb.hint and
-  // an info icon on each pane. Missing entry means visible (default on).
-  property var hintVisible: ({})
+  // The keybind-hint line only shows while kb.hint is held down (press to
+  // show, release to hide) — same on every pane, nothing persisted.
+  property bool hintHeld: false
+  // When on (default), the hint line stays visible on every pane. When off,
+  // it only shows while kb.hint is held.
+  property bool showKeybindHints: true
 
   function isHintVisible(screenName) {
-    return root.hintVisible[screenName] !== false
+    return root.showKeybindHints || root.hintHeld
   }
 
-  function toggleHint(screenName) {
-    var updated = Object.assign({}, root.hintVisible)
-    updated[screenName] = !root.isHintVisible(screenName)
-    root.hintVisible = updated
+  function toggleShowKeybindHints() {
+    root.showKeybindHints = !root.showKeybindHints
     root.saveKeybinds()
   }
 
   function hintText(screenName) {
     switch (screenName) {
-      case "network": return "hjkl move · space select"
-      case "bluetooth": return "jk move · space connect"
+      case "network": return "hjkl move · space select · " + (root.wifiPowerKey || "").toUpperCase() + " toggles Wi-Fi"
+      case "bluetooth": return "jk move · space connect · " + (root.bluetoothPowerKey || "").toUpperCase() + " toggles on/off"
       case "btdevice": return "space toggle · f forget"
-      case "audio": return "jk move · hl adjust · space mute"
+      case "audio": return "jk move · hl adjust · space mute · " + (root.audioMuteKey || "").toUpperCase() + " mutes directly"
       case "display": return "jk move · hl adjust · letter jumps to a control (n = night light)"
       case "battery": return "hl move · space apply · letter jumps to a profile"
       case "poweractions": return "hold a tile's letter to run it · tap to ask first"
@@ -150,6 +151,11 @@ Item {
       [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint, "s"])
     var result = {}
     root.tiles.forEach(function(tile) { result[tile.view] = byView[tile.label] })
+    // Calendar reads better as "c" and Apps as "e" than the generic
+    // first-free-letter fallback would pick.
+    var swap = result.calendar
+    result.calendar = result.apps
+    result.apps = swap
     return result
   }
 
@@ -359,9 +365,10 @@ Item {
       var parsed = JSON.parse(trimmed)
       root.keybinds = Object.assign({}, root.defaultKeybinds, parsed.keybinds || {})
       root.tileKeys = Object.assign({}, root.computeDefaultTileKeys(), parsed.tileKeys || {})
-      root.hintVisible = parsed.hintVisible || {}
       if (typeof parsed.powerHoldSeconds === "number")
         root.powerHoldSeconds = Math.max(root.minPowerHoldSeconds, Math.min(root.maxPowerHoldSeconds, parsed.powerHoldSeconds))
+      if (typeof parsed.showKeybindHints === "boolean")
+        root.showKeybindHints = parsed.showKeybindHints
     } catch (e) {
       root.tileKeys = defaultTileKeys
     }
@@ -371,8 +378,8 @@ Item {
     var json = JSON.stringify({
       keybinds: root.keybinds,
       tileKeys: root.tileKeys,
-      hintVisible: root.hintVisible,
-      powerHoldSeconds: root.powerHoldSeconds
+      powerHoldSeconds: root.powerHoldSeconds,
+      showKeybindHints: root.showKeybindHints
     })
     var path = root.keybindsPath()
     keybindsSaveProcess.command = ["bash", "-c",
@@ -424,7 +431,7 @@ Item {
   property int settingsIndex: 0
 
   function settingsActions() {
-    var actions = ["holdtime", "up", "down", "left", "right", "activate", "search", "hint"]
+    var actions = ["holdtime", "showhints", "up", "down", "left", "right", "activate", "search", "hint"]
     root.tiles.forEach(function(tile) { actions.push("tile:" + tile.view) })
     return actions
   }
@@ -432,13 +439,14 @@ Item {
   function settingsLabel(action) {
     switch (action) {
       case "holdtime": return "Power hold time"
+      case "showhints": return "Show keybind hint"
       case "up": return "Move up"
       case "down": return "Move down"
       case "left": return "Move left"
       case "right": return "Move right"
       case "activate": return "Activate / select"
       case "search": return "Search apps"
-      case "hint": return "Toggle pane hint"
+      case "hint": return "Hold to show hint"
     }
     if (action.indexOf("tile:") === 0) {
       var view = action.slice(5)
@@ -450,13 +458,14 @@ Item {
 
   function settingsKeyFor(action) {
     if (action === "holdtime") return root.powerHoldSeconds.toFixed(1) + "s"
+    if (action === "showhints") return root.showKeybindHints ? "ON" : "OFF"
     if (action.indexOf("tile:") === 0) return root.tileKeys[action.slice(5)] || ""
     return root.keybinds[action] || ""
   }
 
   function moveSettingsSelection(delta) {
     var count = root.settingsActions().length
-    root.settingsIndex = Math.max(0, Math.min(count - 1, root.settingsIndex + delta))
+    root.settingsIndex = (root.settingsIndex + delta + count) % count
   }
 
   property int selectedIndex: 0
@@ -557,12 +566,16 @@ Item {
   property int audioFocusIndex: 0
 
   function audioControls() {
-    var items = [{ type: "outputSlider" }]
+    var items = [{ type: "muteToggle" }, { type: "outputSlider" }]
     audio.sinks.forEach(function(s) { items.push({ type: "outputDevice", value: s }) })
     items.push({ type: "inputSlider" })
     audio.sources.forEach(function(s) { items.push({ type: "inputDevice", value: s }) })
     return items
   }
+
+  property string audioMuteKey: root.computeLetterKeys(
+    [{ label: "Mute" }],
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint]).Mute
 
   function moveAudioFocus(delta) {
     var items = root.audioControls()
@@ -583,6 +596,7 @@ Item {
     var item = items[root.audioFocusIndex]
     if (!item) return
     switch (item.type) {
+      case "muteToggle": audio.toggleMute(); break
       case "outputSlider": audio.toggleMute(); break
       case "inputSlider": audio.toggleInputMute(); break
       case "outputDevice": audio.setDefaultSink(item.value.name); break
@@ -594,6 +608,7 @@ Item {
     switch (root.screen) {
       case "network": {
         var items = [
+          { type: "wifipower", value: null },
           { type: "dns", value: "DHCP" },
           { type: "dns", value: "Cloudflare" },
           { type: "dns", value: "Google" },
@@ -605,13 +620,22 @@ Item {
         return items
       }
       case "bluetooth":
-        return bt.devices.map(function(d) { return { type: "bt", value: d } })
+        return [{ type: "btpower", value: null }].concat(
+          bt.devices.map(function(d) { return { type: "bt", value: d } }))
       case "battery":
         return power.profiles.map(function(p) { return { type: "profile", value: p.name } })
       default:
         return []
     }
   }
+
+  property string bluetoothPowerKey: root.computeLetterKeys(
+    [{ label: "Power" }],
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint]).Power
+
+  property string wifiPowerKey: root.computeLetterKeys(
+    [{ label: "Power" }],
+    [root.keybinds.up, root.keybinds.down, root.keybinds.left, root.keybinds.right, root.keybinds.activate, root.keybinds.hint]).Power
 
   property var profileKeys: root.computeLetterKeys(
     power.profiles.map(function(p) { return { label: p.name } }),
@@ -629,22 +653,28 @@ Item {
   function moveNetworkPane(dx, dy) {
     var items = root.paneList()
     if (items.length === 0) return
+    var dnsStart = 1
     var dnsCount = 4
-    var otherCount = items.length - dnsCount
+    var otherStart = dnsStart + dnsCount
+    var otherCount = items.length - otherStart
     var idx = root.paneIndex
 
-    if (idx < dnsCount) {
+    if (idx === 0) {
+      if (dy > 0) idx = dnsStart
+    } else if (idx < otherStart) {
       if (dx !== 0) {
-        idx = (idx + dx + dnsCount) % dnsCount
+        idx = dnsStart + ((idx - dnsStart + dx + dnsCount) % dnsCount)
+      } else if (dy < 0) {
+        idx = 0
       } else if (dy > 0 && otherCount > 0) {
-        idx = dnsCount
+        idx = otherStart
       }
     } else {
       if (dy !== 0) {
-        var otherIdx = (idx - dnsCount) + dy
-        if (otherIdx < 0) idx = 0
+        var otherIdx = (idx - otherStart) + dy
+        if (otherIdx < 0) idx = dnsStart
         else if (otherIdx >= otherCount) idx = items.length - 1
-        else idx = dnsCount + otherIdx
+        else idx = otherStart + otherIdx
       }
     }
 
@@ -660,6 +690,8 @@ Item {
       case "connect": net.connectTo(item.value); break
       case "bt": root.screen = "btdevice"; bt.showDetail(item.value); break
       case "profile": power.setProfile(item.value); break
+      case "btpower": bt.togglePower(); break
+      case "wifipower": net.toggleRadio(); break
     }
   }
 
@@ -734,6 +766,7 @@ Item {
       root.appsQuery = ""
       root.settingsIndex = 0
       root.rebindingAction = ""
+      root.hintHeld = false
       switch (tile.view) {
         case "network": net.refresh(); break
         case "bluetooth": bt.refresh(); bt.startScan(); break
@@ -871,7 +904,7 @@ Item {
         if (root.rebindingAction) return
         if (root.screen === "grid") root.activateSelection()
         else if (root.screen === "apps") root.activateApp()
-        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa !== "holdtime") root.startRebind(sa) }
+        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa === "showhints") root.toggleShowKeybindHints(); else if (sa !== "holdtime") root.startRebind(sa) }
         else if (root.screen === "display") root.activateDisplayFocus()
         else if (root.screen === "audio") root.activateAudioFocus()
         else if (root.screen === "quick") root.activateQuickSelection()
@@ -882,7 +915,7 @@ Item {
         if (root.rebindingAction) return
         if (root.screen === "grid") root.activateSelection()
         else if (root.screen === "apps") root.activateApp()
-        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa !== "holdtime") root.startRebind(sa) }
+        else if (root.screen === "settings") { var sa = root.settingsActions()[root.settingsIndex]; if (sa === "showhints") root.toggleShowKeybindHints(); else if (sa !== "holdtime") root.startRebind(sa) }
         else if (root.screen === "display") root.activateDisplayFocus()
         else if (root.screen === "audio") root.activateAudioFocus()
         else if (root.screen === "quick") root.activateQuickSelection()
@@ -890,8 +923,13 @@ Item {
         else root.activatePane()
       }
       Keys.onReleased: (event) => {
-        if (root.screen !== "poweractions" || event.isAutoRepeat) return
+        if (event.isAutoRepeat) return
         var t = (event.text || "").toLowerCase()
+        if (t === root.keybinds.hint && root.hintHeld) {
+          root.hintHeld = false
+          event.accepted = true
+        }
+        if (root.screen !== "poweractions") return
         if (root.powerHoldLabel && root.powerKeys[root.powerHoldLabel] === t) {
           root.releasePowerHold()
           event.accepted = true
@@ -917,8 +955,8 @@ Item {
         var kb = root.keybinds
         var t = (event.text || "").toLowerCase()
 
-        if (t === kb.hint && root.screen !== "grid" && root.screen !== "settings" && !root.powerConfirmAction) {
-          root.toggleHint(root.screen)
+        if (t === kb.hint && !event.isAutoRepeat && root.screen !== "settings" && !root.powerConfirmAction) {
+          root.hintHeld = true
           event.accepted = true
           return
         }
@@ -955,11 +993,13 @@ Item {
             else if (t === kb.down) { root.moveNetworkPane(0, 1); event.accepted = true }
             else if (t === kb.left) { root.moveNetworkPane(-1, 0); event.accepted = true }
             else if (t === kb.right) { root.moveNetworkPane(1, 0); event.accepted = true }
+            else if (t === root.wifiPowerKey) { net.toggleRadio(); event.accepted = true }
             break
           case "bluetooth":
             if (t === kb.activate) { root.activatePane(); event.accepted = true }
             else if (t === kb.up) { root.movePane(-1); event.accepted = true }
             else if (t === kb.down) { root.movePane(1); event.accepted = true }
+            else if (t === root.bluetoothPowerKey) { bt.togglePower(); event.accepted = true }
             break
           case "battery":
             if (t === kb.activate) { root.activatePane(); event.accepted = true }
@@ -1014,6 +1054,7 @@ Item {
             else if (t === kb.right) { root.adjustAudioFocus(1); event.accepted = true }
             else if (t === kb.left) { root.adjustAudioFocus(-1); event.accepted = true }
             else if (t === kb.activate) { root.activateAudioFocus(); event.accepted = true }
+            else if (t === root.audioMuteKey) { root.audioFocusIndex = 0; audio.toggleMute(); event.accepted = true }
             break
           case "display":
             if (t === kb.up) {
@@ -1038,6 +1079,7 @@ Item {
             else if (t === kb.down) { root.moveSettingsSelection(1); event.accepted = true }
             else if (settingsAction === "holdtime" && t === kb.left) { root.adjustPowerHoldSeconds(-0.1); event.accepted = true }
             else if (settingsAction === "holdtime" && t === kb.right) { root.adjustPowerHoldSeconds(0.1); event.accepted = true }
+            else if (t === kb.activate && settingsAction === "showhints") { root.toggleShowKeybindHints(); event.accepted = true }
             else if (t === kb.activate && settingsAction !== "holdtime") { root.startRebind(settingsAction); event.accepted = true }
             break
           }
@@ -1123,6 +1165,7 @@ Item {
         CalendarView { root: root }
         AppsView { root: root; apps: apps }
         SettingsView { root: root }
+
       }
     }
   }

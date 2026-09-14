@@ -24,12 +24,13 @@ ColumnLayout {
 
     ColumnLayout {
       spacing: 0
-      Layout.fillWidth: true
       Text { text: "Battery"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true }
       Text { text: power.statusLabel(); color: "#a6adc8"; font.pixelSize: 9 }
     }
 
     Text { text: power.percent + "%"; color: "#f4f4f8"; font.pixelSize: 15; font.bold: true }
+
+    Item { Layout.fillWidth: true }
 
     PaneHint { root: view.root; screenName: "battery" }
   }
@@ -134,6 +135,7 @@ ColumnLayout {
         }
 
         Text {
+          visible: root.isHintVisible("battery")
           anchors.top: parent.top
           anchors.right: parent.right
           anchors.margins: 4

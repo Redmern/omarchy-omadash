@@ -44,6 +44,13 @@ ColumnLayout {
 
             Item { Layout.fillWidth: true }
 
+            Text {
+              visible: root.isHintVisible("network")
+              text: (root.wifiPowerKey || "").toUpperCase()
+              color: "#6c7086"
+              font.pixelSize: 9
+            }
+
             PaneHint { root: view.root; screenName: "network" }
 
             Rectangle {
@@ -51,6 +58,8 @@ ColumnLayout {
               height: 22
               radius: 11
               color: net.radioOn ? "#89b4fa" : "#45475a"
+              border.width: root.screen === "network" && root.paneIndex === 0 ? 2 : 0
+              border.color: "#f9e2af"
 
               Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -64,7 +73,7 @@ ColumnLayout {
                 Behavior on x { NumberAnimation { duration: 150 } }
               }
 
-              MouseArea { anchors.fill: parent; onClicked: net.toggleRadio() }
+              MouseArea { anchors.fill: parent; onClicked: { root.paneIndex = 0; net.toggleRadio() } }
             }
           }
 
@@ -126,7 +135,7 @@ ColumnLayout {
                 height: 26
                 radius: 6
                 color: net.dns === modelData ? "#89b4fa" : "#313244"
-                border.width: root.screen === "network" && root.paneIndex === index ? 2 : 0
+                border.width: root.screen === "network" && root.paneIndex === index + 1 ? 2 : 0
                 border.color: "#f9e2af"
 
                 Text {
@@ -138,7 +147,7 @@ ColumnLayout {
 
                 MouseArea {
                   anchors.fill: parent
-                  onClicked: { root.paneIndex = dnsBtn.index; net.setDns(dnsBtn.modelData) }
+                  onClicked: { root.paneIndex = dnsBtn.index + 1; net.setDns(dnsBtn.modelData) }
                 }
               }
             }
@@ -185,7 +194,7 @@ ColumnLayout {
             clip: true
             spacing: 4
             model: net.otherNetworks
-            currentIndex: root.screen === "network" && root.paneIndex >= 4 ? root.paneIndex - 4 : -1
+            currentIndex: root.screen === "network" && root.paneIndex >= 5 ? root.paneIndex - 5 : -1
             highlightMoveDuration: 100
 
             delegate: Rectangle {
@@ -196,7 +205,7 @@ ColumnLayout {
               height: 28
               radius: 6
               color: "transparent"
-              border.width: root.screen === "network" && root.paneIndex === index + 4 ? 2 : 0
+              border.width: root.screen === "network" && root.paneIndex === index + 5 ? 2 : 0
               border.color: "#f9e2af"
 
               RowLayout {
@@ -215,7 +224,7 @@ ColumnLayout {
 
               MouseArea {
                 anchors.fill: parent
-                onClicked: { root.paneIndex = otherRow.index + 4; net.connectTo(otherRow.modelData.ssid) }
+                onClicked: { root.paneIndex = otherRow.index + 5; net.connectTo(otherRow.modelData.ssid) }
               }
             }
           }
