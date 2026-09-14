@@ -39,6 +39,14 @@ install.sh      Symlinks this repo into ~/.config/omarchy/plugins/
 
 ## Install
 
+Quick install (clones into `~/.config/omarchy/plugins/`, no editing):
+
+```bash
+omarchy plugin add https://github.com/Redmern/omarchy-omadash.git --enable
+```
+
+Dev install (symlinks this repo instead, so edits here take effect live):
+
 ```bash
 ./install.sh
 ```
